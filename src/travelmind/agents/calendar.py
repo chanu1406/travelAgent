@@ -30,8 +30,13 @@ Output: A structured itinerary with:
 - Free time blocks
 """
 
-from datetime import date
+from datetime import date, datetime, timedelta
 from typing import Any
+
+from ..models.poi import POI
+from ..models.request import TravelConstraints
+from .route import RouteAgent
+from .weather import WeatherAgent
 
 
 class CalendarAgent:
@@ -43,68 +48,256 @@ class CalendarAgent:
     """
 
     def __init__(self) -> None:
-        """Initialize calendar agent with scheduling logic."""
-        pass
+        """Initialize calendar agent with other agents."""
+        self.route_agent = RouteAgent()
+        self.weather_agent = WeatherAgent()
 
     async def build_itinerary(
         self,
-        pois: list[dict[str, Any]],
-        weather_forecast: dict[str, Any],
+        pois: list[POI],
+        start_location: tuple[float, float],
         travel_dates: list[date],
-        constraints: dict[str, Any],
+        constraints: TravelConstraints | None = None,
+        mobility: str = "walking",
     ) -> dict[str, Any]:
         """
         Create a complete itinerary from available data.
 
         Args:
             pois: List of POIs to schedule
-            weather_forecast: Weather data for the trip dates
+            start_location: Hotel/accommodation coordinates (lat, lon)
             travel_dates: List of dates in the trip
             constraints: User preferences (max_walk_km, pace, etc.)
+            mobility: Transport mode (walking, driving, cycling)
 
         Returns:
             Complete itinerary with day-by-day schedules
         """
-        raise NotImplementedError("Itinerary building logic to be implemented")
+        if constraints is None:
+            constraints = TravelConstraints()
+
+        n_days = len(travel_dates)
+
+        # Step 1: Cluster POIs by day (simple round-robin for now)
+        poi_clusters = self._cluster_by_day(pois, n_days)
+
+        # Step 2: Get weather forecast
+        if pois:
+            lat, lon = pois[0].latitude, pois[0].longitude
+            weather_data = await self.weather_agent.get_forecast(
+                latitude=lat,
+                longitude=lon,
+                start_date=travel_dates[0],
+                end_date=travel_dates[-1],
+            )
+        else:
+            weather_data = {"daily": [], "hourly": []}
+
+        # Step 3: Build daily schedules
+        daily_schedules = []
+        for day_idx, day_date in enumerate(travel_dates):
+            day_pois = poi_clusters[day_idx] if day_idx < len(poi_clusters) else []
+
+            # Get weather for this day
+            day_weather = None
+            if day_idx < len(weather_data.get("daily", [])):
+                day_weather = weather_data["daily"][day_idx]
+
+            # Optimize POI order for this day
+            if day_pois:
+                optimized_pois = await self.route_agent.optimize_visit_order(
+                    pois=day_pois,
+                    start_location=start_location,
+                    mode=mobility,  # type: ignore
+                )
+            else:
+                optimized_pois = []
+
+            # Schedule the day
+            day_schedule = await self._schedule_day(
+                day_date=day_date,
+                pois=optimized_pois,
+                start_location=start_location,
+                day_weather=day_weather,
+                constraints=constraints,
+                mobility=mobility,
+            )
+
+            daily_schedules.append(day_schedule)
+
+        return {
+            "trip_dates": [str(d) for d in travel_dates],
+            "days": daily_schedules,
+            "total_days": n_days,
+            "total_pois": len(pois),
+        }
 
     def _cluster_by_day(
         self,
-        pois: list[dict[str, Any]],
+        pois: list[POI],
         n_days: int,
-    ) -> list[list[dict[str, Any]]]:
+    ) -> list[list[POI]]:
         """
-        Assign POIs to days based on geographic proximity.
+        Assign POIs to days using simple round-robin distribution.
 
-        Uses clustering algorithm (e.g., k-means on coordinates).
+        Future: Could use k-means clustering based on coordinates.
+
+        Args:
+            pois: List of POIs to distribute
+            n_days: Number of days in the trip
+
+        Returns:
+            List of POI lists, one per day
         """
-        raise NotImplementedError("POI clustering to be implemented")
+        if not pois or n_days <= 0:
+            return []
 
-    def _schedule_day(
+        # Simple distribution: divide POIs evenly across days
+        pois_per_day = len(pois) // n_days
+        remainder = len(pois) % n_days
+
+        clusters = []
+        start_idx = 0
+
+        for day in range(n_days):
+            # Give extra POI to early days if there's a remainder
+            day_size = pois_per_day + (1 if day < remainder else 0)
+            end_idx = start_idx + day_size
+
+            clusters.append(pois[start_idx:end_idx])
+            start_idx = end_idx
+
+        return clusters
+
+    async def _schedule_day(
         self,
-        pois: list[dict[str, Any]],
-        day_weather: dict[str, Any],
-        start_time: str = "09:00",
-        end_time: str = "18:00",
-    ) -> list[dict[str, Any]]:
+        day_date: date,
+        pois: list[POI],
+        start_location: tuple[float, float],
+        day_weather: dict[str, Any] | None,
+        constraints: TravelConstraints,
+        mobility: str,
+    ) -> dict[str, Any]:
         """
         Create a timed schedule for a single day.
 
         Args:
-            pois: POIs to visit this day
+            day_date: Date for this day
+            pois: POIs to visit this day (already optimized order)
+            start_location: Starting coordinates
             day_weather: Weather forecast for the day
-            start_time: When to start the day
-            end_time: When to end the day
+            constraints: User constraints
+            mobility: Transport mode
 
         Returns:
-            Time-slotted schedule with POIs and transitions
+            Day schedule with timeline
         """
-        raise NotImplementedError("Daily scheduling to be implemented")
+        # Parse start time
+        start_hour, start_minute = map(int, constraints.preferred_start_time.split(":"))
+        current_time = datetime.combine(day_date, datetime.min.time()).replace(
+            hour=start_hour, minute=start_minute
+        )
 
-    def _validate_itinerary(self, itinerary: dict[str, Any]) -> list[str]:
-        """
-        Check itinerary for issues (too much walking, closed POIs, etc.).
+        timeline = []
+        current_location = start_location
 
-        Returns:
-            List of warnings or empty if valid
-        """
-        raise NotImplementedError("Itinerary validation to be implemented")
+        # Add starting point
+        timeline.append({
+            "time": current_time.strftime("%H:%M"),
+            "type": "start",
+            "location": "Accommodation",
+            "notes": "Start of day",
+        })
+
+        total_walking_km = 0.0
+
+        # Schedule each POI
+        for poi in pois:
+            poi_location = (poi.latitude, poi.longitude)
+
+            # Calculate travel time to this POI
+            route = await self.route_agent.get_route(
+                origin=current_location,
+                destination=poi_location,
+                mode=mobility,  # type: ignore
+            )
+
+            travel_minutes = route["duration"] / 60
+            travel_km = route["distance"] / 1000
+            total_walking_km += travel_km
+
+            # Add travel segment
+            current_time += timedelta(minutes=travel_minutes)
+            timeline.append({
+                "time": current_time.strftime("%H:%M"),
+                "type": "travel",
+                "mode": mobility,
+                "duration_minutes": int(travel_minutes),
+                "distance_km": round(travel_km, 2),
+            })
+
+            # Add POI visit
+            current_time += timedelta(minutes=poi.estimated_visit_duration_minutes)
+            timeline.append({
+                "time": current_time.strftime("%H:%M"),
+                "type": "poi",
+                "name": poi.name,
+                "category": poi.category,
+                "duration_minutes": poi.estimated_visit_duration_minutes,
+                "address": poi.address,
+                "coordinates": {"lat": poi.latitude, "lon": poi.longitude},
+            })
+
+            current_location = poi_location
+
+        # Return to accommodation
+        if pois:
+            route = await self.route_agent.get_route(
+                origin=current_location,
+                destination=start_location,
+                mode=mobility,  # type: ignore
+            )
+            travel_minutes = route["duration"] / 60
+            travel_km = route["distance"] / 1000
+            total_walking_km += travel_km
+
+            current_time += timedelta(minutes=travel_minutes)
+            timeline.append({
+                "time": current_time.strftime("%H:%M"),
+                "type": "travel",
+                "mode": mobility,
+                "duration_minutes": int(travel_minutes),
+                "distance_km": round(travel_km, 2),
+            })
+
+        timeline.append({
+            "time": current_time.strftime("%H:%M"),
+            "type": "end",
+            "location": "Accommodation",
+            "notes": "End of day",
+        })
+
+        # Build day summary
+        weather_summary = "Unknown"
+        weather_category = "unknown"
+        if day_weather:
+            weather_summary = day_weather.get("weather_description", "Unknown")
+            weather_category = self.weather_agent.categorize_day(day_weather)
+
+        return {
+            "date": str(day_date),
+            "weather": {
+                "description": weather_summary,
+                "category": weather_category,
+            },
+            "pois_count": len(pois),
+            "total_walking_km": round(total_walking_km, 2),
+            "start_time": timeline[0]["time"],
+            "end_time": timeline[-1]["time"],
+            "timeline": timeline,
+        }
+
+    async def close(self) -> None:
+        """Close all sub-agents."""
+        await self.route_agent.close()
+        await self.weather_agent.close()

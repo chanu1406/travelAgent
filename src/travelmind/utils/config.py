@@ -28,12 +28,13 @@ class Settings(BaseSettings):
     )
 
     # LLM Configuration
+    google_api_key: str | None = None
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
     ollama_base_url: str = "http://localhost:11434"
 
     # External API Keys
-    opentripmap_api_key: str | None = None
+    geoapify_api_key: str | None = None
     openrouteservice_api_key: str | None = None
     osrm_base_url: str = "http://router.project-osrm.org"
 

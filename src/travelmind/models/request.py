@@ -76,6 +76,14 @@ class TravelRequest(BaseModel):
         description="Original user query for reference"
     )
 
+    def get_duration_days(self) -> int:
+        """Calculate trip duration in days."""
+        if self.duration_days:
+            return self.duration_days
+        if self.start_date and self.end_date:
+            return (self.end_date - self.start_date).days + 1
+        raise ValueError("Either duration_days or both start_date and end_date must be provided")
+
 
 class TravelConstraints(BaseModel):
     """User constraints and preferences for itinerary building."""

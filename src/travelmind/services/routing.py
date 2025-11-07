@@ -57,8 +57,46 @@ class OSRMClient:
 
         Returns:
             Route data with distance, duration, and geometry
+
+        Raises:
+            httpx.HTTPError: If the request fails
         """
-        raise NotImplementedError("OSRM routing to be implemented")
+        # Convert profile to OSRM profile name
+        profile_map = {
+            "walking": "foot",
+            "driving": "car",
+            "cycling": "bike",
+        }
+        osrm_profile = profile_map.get(profile, "foot")
+
+        # Convert coordinates from (lat, lon) to "lon,lat;lon,lat" format
+        coord_string = ";".join(f"{lon},{lat}" for lat, lon in coordinates)
+
+        # Build URL
+        url = f"{self.base_url}/route/v1/{osrm_profile}/{coord_string}"
+
+        # Request with geometry in GeoJSON format for easier parsing
+        params = {
+            "overview": "full",
+            "geometries": "geojson",
+        }
+
+        response = await self.client.get(url, params=params)
+        response.raise_for_status()
+
+        data = response.json()
+
+        if data["code"] != "Ok":
+            raise ValueError(f"OSRM error: {data.get('message', 'Unknown error')}")
+
+        # Extract the first route
+        route = data["routes"][0]
+
+        return {
+            "distance": route["distance"],  # meters
+            "duration": route["duration"],  # seconds
+            "geometry": route["geometry"],  # GeoJSON LineString
+        }
 
     async def get_table(
         self,
@@ -73,9 +111,43 @@ class OSRMClient:
             profile: "walking", "driving", or "cycling"
 
         Returns:
-            Matrix of distances and durations
+            Matrix of distances (meters) and durations (seconds)
+            Format: {"durations": [[float]], "distances": [[float]]}
+
+        Raises:
+            httpx.HTTPError: If the request fails
         """
-        raise NotImplementedError("OSRM table service to be implemented")
+        # Convert profile to OSRM profile name
+        profile_map = {
+            "walking": "foot",
+            "driving": "car",
+            "cycling": "bike",
+        }
+        osrm_profile = profile_map.get(profile, "foot")
+
+        # Convert coordinates from (lat, lon) to "lon,lat;lon,lat" format
+        coord_string = ";".join(f"{lon},{lat}" for lat, lon in coordinates)
+
+        # Build URL
+        url = f"{self.base_url}/table/v1/{osrm_profile}/{coord_string}"
+
+        # Request both distances and durations
+        params = {
+            "annotations": "distance,duration",
+        }
+
+        response = await self.client.get(url, params=params)
+        response.raise_for_status()
+
+        data = response.json()
+
+        if data["code"] != "Ok":
+            raise ValueError(f"OSRM error: {data.get('message', 'Unknown error')}")
+
+        return {
+            "durations": data["durations"],  # seconds, row-major matrix
+            "distances": data["distances"],  # meters, row-major matrix
+        }
 
     async def close(self) -> None:
         """Close the HTTP client."""

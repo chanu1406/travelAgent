@@ -31,7 +31,7 @@ class POI(BaseModel):
     """
 
     id: str = Field(description="Unique identifier (from data source)")
-    source: str = Field(description="Data source: 'opentripmap', 'osm', etc.")
+    source: str = Field(description="Data source: 'foursquare', 'osm', etc.")
     name: str
     category: str = Field(
         description="Primary category (e.g., 'temple', 'museum', 'cafe')"

@@ -1,0 +1,259 @@
+{
+  "trip_dates": [
+    "2025-11-10",
+    "2025-11-11",
+    "2025-11-12"
+  ],
+  "days": [
+    {
+      "date": "2025-11-10",
+      "weather": {
+        "description": "Partly cloudy",
+        "category": "excellent"
+      },
+      "pois_count": 3,
+      "total_walking_km": 1.47,
+      "start_time": "09:00",
+      "end_time": "12:03",
+      "timeline": [
+        {
+          "time": "09:00",
+          "type": "start",
+          "location": "Accommodation",
+          "notes": "Start of day"
+        },
+        {
+          "time": "09:00",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 0,
+          "distance_km": 0.0
+        },
+        {
+          "time": "10:00",
+          "type": "poi",
+          "name": "本能寺",
+          "category": "Religion",
+          "duration_minutes": 60,
+          "address": "Honnō-ji temple, 522 Teramachi street, Nakagyo Ward, Kyoto, Rokuchome 604-8091, Japan",
+          "coordinates": {
+            "lat": 35.01012654965234,
+            "lon": 135.7681049705959
+          }
+        },
+        {
+          "time": "10:00",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 0,
+          "distance_km": 0.33
+        },
+        {
+          "time": "11:00",
+          "type": "poi",
+          "name": "白山神社",
+          "category": "Religion",
+          "duration_minutes": 60,
+          "address": "白山神社, Fuyacho street, Nakagyo Ward, Kyoto, Rokuchome 604-0935, Japan",
+          "coordinates": {
+            "lat": 35.01184439965246,
+            "lon": 135.76589427239128
+          }
+        },
+        {
+          "time": "11:02",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 1,
+          "distance_km": 0.8
+        },
+        {
+          "time": "12:02",
+          "type": "poi",
+          "name": "廣誠院",
+          "category": "Building",
+          "duration_minutes": 60,
+          "address": "廣誠院, 押小路通, Nakagyo Ward, Kyoto, Rokuchome 604-0924, Japan",
+          "coordinates": {
+            "lat": 35.01201119965248,
+            "lon": 135.7702202118886
+          }
+        },
+        {
+          "time": "12:03",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 0,
+          "distance_km": 0.33
+        },
+        {
+          "time": "12:03",
+          "type": "end",
+          "location": "Accommodation",
+          "notes": "End of day"
+        }
+      ]
+    },
+    {
+      "date": "2025-11-11",
+      "weather": {
+        "description": "Overcast",
+        "category": "excellent"
+      },
+      "pois_count": 3,
+      "total_walking_km": 1.44,
+      "start_time": "09:00",
+      "end_time": "12:03",
+      "timeline": [
+        {
+          "time": "09:00",
+          "type": "start",
+          "location": "Accommodation",
+          "notes": "Start of day"
+        },
+        {
+          "time": "09:00",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 0,
+          "distance_km": 0.44
+        },
+        {
+          "time": "10:00",
+          "type": "poi",
+          "name": "天性寺",
+          "category": "Religion",
+          "duration_minutes": 60,
+          "address": "天性寺, 姉小路通, Nakagyo Ward, Kyoto, Rokuchome 604-8006, Japan",
+          "coordinates": {
+            "lat": 35.009260099652295,
+            "lon": 135.76772461963589
+          }
+        },
+        {
+          "time": "10:01",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 0,
+          "distance_km": 0.09
+        },
+        {
+          "time": "11:01",
+          "type": "poi",
+          "name": "カトリック河原町教会",
+          "category": "Religion",
+          "duration_minutes": 60,
+          "address": "Kathredral of Saint Francis Xavier, 姉小路通, Nakagyo Ward, Kyoto, Rokuchome 604-8005, Japan",
+          "coordinates": {
+            "lat": 35.009727099652316,
+            "lon": 135.7696212
+          }
+        },
+        {
+          "time": "11:02",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 1,
+          "distance_km": 0.51
+        },
+        {
+          "time": "12:02",
+          "type": "poi",
+          "name": "法雲寺",
+          "category": "Religion",
+          "duration_minutes": 60,
+          "address": "法雲寺, Nijō Street, Nakagyo Ward, Kyoto, Rokuchome 604-0922, Japan",
+          "coordinates": {
+            "lat": 35.01357899965259,
+            "lon": 135.76952039999998
+          }
+        },
+        {
+          "time": "12:03",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 0,
+          "distance_km": 0.39
+        },
+        {
+          "time": "12:03",
+          "type": "end",
+          "location": "Accommodation",
+          "notes": "End of day"
+        }
+      ]
+    },
+    {
+      "date": "2025-11-12",
+      "weather": {
+        "description": "Overcast",
+        "category": "excellent"
+      },
+      "pois_count": 2,
+      "total_walking_km": 0.7,
+      "start_time": "09:00",
+      "end_time": "11:01",
+      "timeline": [
+        {
+          "time": "09:00",
+          "type": "start",
+          "location": "Accommodation",
+          "notes": "Start of day"
+        },
+        {
+          "time": "09:00",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 0,
+          "distance_km": 0.35
+        },
+        {
+          "time": "10:00",
+          "type": "poi",
+          "name": "矢田寺",
+          "category": "Religion",
+          "duration_minutes": 60,
+          "address": "矢田寺, Teramachi street, Nakagyo Ward, Kyoto, Rokuchome 604-8091, Japan",
+          "coordinates": {
+            "lat": 35.00890729965226,
+            "lon": 135.7672571
+          }
+        },
+        {
+          "time": "10:01",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 0,
+          "distance_km": 0.07
+        },
+        {
+          "time": "11:01",
+          "type": "poi",
+          "name": "辨天堂",
+          "category": "Religion",
+          "duration_minutes": 60,
+          "address": "辨天堂, Sanjo Street, Nakagyo Ward, Kyoto, Rokuchome 604-8036, Japan",
+          "coordinates": {
+            "lat": 35.009033899652266,
+            "lon": 135.7680693
+          }
+        },
+        {
+          "time": "11:01",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 0,
+          "distance_km": 0.28
+        },
+        {
+          "time": "11:01",
+          "type": "end",
+          "location": "Accommodation",
+          "notes": "End of day"
+        }
+      ]
+    }
+  ],
+  "total_days": 3,
+  "total_pois": 8
+}

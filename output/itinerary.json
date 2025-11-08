@@ -1,0 +1,150 @@
+{
+  "trip_dates": [
+    "2025-11-08",
+    "2025-11-09"
+  ],
+  "days": [
+    {
+      "date": "2025-11-08",
+      "weather": {
+        "description": "Overcast",
+        "category": "excellent"
+      },
+      "pois_count": 2,
+      "total_walking_km": 24.75,
+      "start_time": "09:00",
+      "end_time": "12:15",
+      "timeline": [
+        {
+          "time": "09:00",
+          "type": "start",
+          "location": "Accommodation",
+          "notes": "Start of day"
+        },
+        {
+          "time": "09:12",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 12,
+          "distance_km": 6.89
+        },
+        {
+          "time": "10:12",
+          "type": "poi",
+          "name": "Kinkaku-ji (Golden Pavilion)",
+          "category": "Temple",
+          "duration_minutes": 60,
+          "address": "1 Kinkakujicho, Kita Ward, Kyoto",
+          "coordinates": {
+            "lat": 35.0394,
+            "lon": 135.7292
+          }
+        },
+        {
+          "time": "10:33",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 21,
+          "distance_km": 11.76
+        },
+        {
+          "time": "12:03",
+          "type": "poi",
+          "name": "Fushimi Inari Shrine",
+          "category": "Temple",
+          "duration_minutes": 90,
+          "address": "Fushimi Inari Taisha, Kyoto",
+          "coordinates": {
+            "lat": 34.9671,
+            "lon": 135.7727
+          }
+        },
+        {
+          "time": "12:15",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 11,
+          "distance_km": 6.1
+        },
+        {
+          "time": "12:15",
+          "type": "end",
+          "location": "Accommodation",
+          "notes": "End of day"
+        }
+      ]
+    },
+    {
+      "date": "2025-11-09",
+      "weather": {
+        "description": "Moderate rain",
+        "category": "indoor"
+      },
+      "pois_count": 2,
+      "total_walking_km": 4.49,
+      "start_time": "09:00",
+      "end_time": "11:40",
+      "timeline": [
+        {
+          "time": "09:00",
+          "type": "start",
+          "location": "Accommodation",
+          "notes": "Start of day"
+        },
+        {
+          "time": "09:03",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 3,
+          "distance_km": 1.29
+        },
+        {
+          "time": "10:03",
+          "type": "poi",
+          "name": "Nishiki Market",
+          "category": "Market",
+          "duration_minutes": 60,
+          "address": "Nishikikoji Street, Nakagyo Ward, Kyoto",
+          "coordinates": {
+            "lat": 35.0049,
+            "lon": 135.7653
+          }
+        },
+        {
+          "time": "10:07",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 3,
+          "distance_km": 1.51
+        },
+        {
+          "time": "11:37",
+          "type": "poi",
+          "name": "Gion District",
+          "category": "Cultural",
+          "duration_minutes": 90,
+          "address": "Gion, Higashiyama Ward, Kyoto",
+          "coordinates": {
+            "lat": 35.0037,
+            "lon": 135.776
+          }
+        },
+        {
+          "time": "11:40",
+          "type": "travel",
+          "mode": "walking",
+          "duration_minutes": 3,
+          "distance_km": 1.68
+        },
+        {
+          "time": "11:40",
+          "type": "end",
+          "location": "Accommodation",
+          "notes": "End of day"
+        }
+      ]
+    }
+  ],
+  "total_days": 2,
+  "total_pois": 4
+}

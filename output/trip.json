@@ -8,7 +8,7 @@
     {
       "date": "2025-11-10",
       "weather": {
-        "description": "Partly cloudy",
+        "description": "Overcast",
         "category": "excellent"
       },
       "pois_count": 3,
@@ -97,7 +97,7 @@
     {
       "date": "2025-11-11",
       "weather": {
-        "description": "Overcast",
+        "description": "Mainly clear",
         "category": "excellent"
       },
       "pois_count": 3,
@@ -186,7 +186,7 @@
     {
       "date": "2025-11-12",
       "weather": {
-        "description": "Overcast",
+        "description": "Partly cloudy",
         "category": "excellent"
       },
       "pois_count": 2,

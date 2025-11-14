@@ -40,11 +40,20 @@ GEOAPIFY_API_KEY=your_geoapify_key
 ### 3. Run the Demo
 
 ```bash
-# End-to-end workflow demo
+# Simple end-to-end workflow demo
 python demo_end_to_end.py
+
+# LangGraph stateful workflow demo
+python demo_langgraph.py
+
+# Interactive LangGraph workflow (human-in-the-loop)
+python interactive_langgraph.py
 
 # Interactive intent parser
 python interactive_intent.py
+
+# Visualize workflow graph
+python visualize_graph.py
 ```
 
 ### 4. Check Generated Outputs
@@ -100,23 +109,31 @@ python test_export.py       # Test export formats
 ```
 TravelAgent/
 ├── src/travelmind/
-│   ├── agents/          # Multi-agent system
-│   │   ├── intent.py    # Natural language parsing
-│   │   ├── poi.py       # POI discovery
-│   │   ├── weather.py   # Weather forecasting
-│   │   ├── route.py     # Route optimization
-│   │   ├── calendar.py  # Itinerary building
-│   │   └── export.py    # Output generation
-│   ├── models/          # Pydantic data models
-│   ├── services/        # API clients
-│   └── utils/           # Configuration
-├── tests/               # Individual agent tests
-├── output/              # Generated itineraries
-└── demo_end_to_end.py   # Full workflow demo
+│   ├── agents/              # Multi-agent system
+│   │   ├── intent.py        # Natural language parsing
+│   │   ├── poi.py           # POI discovery
+│   │   ├── weather.py       # Weather forecasting
+│   │   ├── route.py         # Route optimization
+│   │   ├── calendar.py      # Itinerary building
+│   │   └── export.py        # Output generation
+│   ├── workflow/            # LangGraph orchestration
+│   │   ├── state.py         # State schema definitions
+│   │   ├── nodes.py         # Workflow node functions
+│   │   └── graph.py         # Graph creation and routing
+│   ├── models/              # Pydantic data models
+│   ├── services/            # API clients
+│   └── utils/               # Configuration
+├── tests/                   # Individual agent tests
+├── output/                  # Generated itineraries
+├── demo_end_to_end.py       # Simple workflow demo
+├── demo_langgraph.py        # LangGraph workflow demo
+├── interactive_langgraph.py # Interactive HITL workflow
+└── visualize_graph.py       # Workflow visualization
 ```
 
 ## Features
 
+### Core Capabilities
 ✅ Smart geographic clustering to minimize travel
 ✅ Weather-aware activity selection
 ✅ Route optimization using TSP heuristics
@@ -124,9 +141,57 @@ TravelAgent/
 ✅ Multi-format export (JSON, Markdown, ICS)
 ✅ All core agents implemented and tested
 
-## Next Steps (Optional)
+### LangGraph Workflow Features
+✅ **Stateful orchestration** - Complete workflow state management
+✅ **Conditional routing** - Smart branching based on data quality
+✅ **Human-in-the-loop** - User approval and clarification checkpoints
+✅ **Error handling** - Automatic retries with configurable limits
+✅ **Conversation persistence** - SQLite checkpointing for resumable sessions
+✅ **Streaming execution** - Real-time progress updates
 
-- LangGraph workflow orchestration
+## LangGraph Workflow
+
+TravelMind now includes a **LangGraph-powered stateful workflow** with advanced orchestration:
+
+### Workflow Graph Structure
+```
+START → parse_intent → [needs_clarification?]
+                          ├─ YES → ask_clarification → END (HITL)
+                          └─ NO  → discover_pois
+                                    ↓
+                                  build_itinerary
+                                    ↓
+                                  review_itinerary → [approved?]
+                                                      ├─ YES → export → END
+                                                      └─ NO  → END
+```
+
+### Human-in-the-Loop Checkpoints
+1. **Clarification** - Asks for missing trip details
+2. **Review & Approval** - User reviews itinerary before export
+
+### State Persistence
+```python
+# Run workflow with persistence
+from src.travelmind.workflow.graph import create_workflow_with_persistence
+
+app = create_workflow_with_persistence("sessions.db")
+config = {"configurable": {"thread_id": "user-123"}}
+result = await app.ainvoke(initial_state, config)
+```
+
+### Streaming Execution
+```python
+# Stream progress updates
+async for event in app.astream(initial_state, config):
+    node_name = list(event.keys())[0]
+    print(f"Executing: {node_name}")
+```
+
+## Future Enhancements
+
+- ✅ ~~LangGraph workflow orchestration~~ **COMPLETE!**
+- Parallel execution for independent operations (POI + Weather)
 - Multi-city trip support
 - Budget optimization
 - Restaurant recommendations

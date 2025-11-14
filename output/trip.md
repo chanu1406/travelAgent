@@ -10,7 +10,7 @@
 
 ## Day 1: 2025-11-10
 
-**Weather:** Partly cloudy (excellent)
+**Weather:** Overcast (excellent)
 **POIs:** 3
 **Walking:** 1.47 km
 **Time:** 09:00 - 12:03
@@ -51,7 +51,7 @@
 
 ## Day 2: 2025-11-11
 
-**Weather:** Overcast (excellent)
+**Weather:** Mainly clear (excellent)
 **POIs:** 3
 **Walking:** 1.44 km
 **Time:** 09:00 - 12:03
@@ -92,7 +92,7 @@
 
 ## Day 3: 2025-11-12
 
-**Weather:** Overcast (excellent)
+**Weather:** Partly cloudy (excellent)
 **POIs:** 2
 **Walking:** 0.7 km
 **Time:** 09:00 - 11:01

@@ -1,14 +1,14 @@
 {
   "trip_dates": [
-    "2025-11-08",
-    "2025-11-09"
+    "2025-11-09",
+    "2025-11-10"
   ],
   "days": [
     {
-      "date": "2025-11-08",
+      "date": "2025-11-09",
       "weather": {
-        "description": "Overcast",
-        "category": "excellent"
+        "description": "Moderate rain",
+        "category": "indoor"
       },
       "pois_count": 2,
       "total_walking_km": 24.75,
@@ -75,10 +75,10 @@
       ]
     },
     {
-      "date": "2025-11-09",
+      "date": "2025-11-10",
       "weather": {
-        "description": "Moderate rain",
-        "category": "indoor"
+        "description": "Partly cloudy",
+        "category": "excellent"
       },
       "pois_count": 2,
       "total_walking_km": 4.49,

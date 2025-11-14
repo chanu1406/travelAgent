@@ -1,6 +1,6 @@
 # Kyoto Cultural Tour
 
-**Dates:** 2025-11-08 to 2025-11-09
+**Dates:** 2025-11-09 to 2025-11-10
 **Duration:** 2 days
 **Total POIs:** 4
 
@@ -8,9 +8,9 @@
 
 ---
 
-## Day 1: 2025-11-08
+## Day 1: 2025-11-09
 
-**Weather:** Overcast (excellent)
+**Weather:** Moderate rain (indoor)
 **POIs:** 2
 **Walking:** 24.75 km
 **Time:** 09:00 - 12:15
@@ -41,9 +41,9 @@
 
 ---
 
-## Day 2: 2025-11-09
+## Day 2: 2025-11-10
 
-**Weather:** Moderate rain (indoor)
+**Weather:** Partly cloudy (excellent)
 **POIs:** 2
 **Walking:** 4.49 km
 **Time:** 09:00 - 11:40

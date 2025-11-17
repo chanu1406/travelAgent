@@ -12,7 +12,7 @@
         "category": "excellent"
       },
       "pois_count": 3,
-      "total_walking_km": 1.47,
+      "total_walking_km": 1.39,
       "start_time": "09:00",
       "end_time": "12:03",
       "timeline": [
@@ -70,13 +70,13 @@
         {
           "time": "12:02",
           "type": "poi",
-          "name": "廣誠院",
-          "category": "Building",
+          "name": "天性寺",
+          "category": "Religion",
           "duration_minutes": 60,
-          "address": "廣誠院, 押小路通, Nakagyo Ward, Kyoto, Rokuchome 604-0924, Japan",
+          "address": "天性寺, 姉小路通, Nakagyo Ward, Kyoto, Rokuchome 604-8006, Japan",
           "coordinates": {
-            "lat": 35.01201119965248,
-            "lon": 135.7702202118886
+            "lat": 35.009260099652295,
+            "lon": 135.76772461963589
           }
         },
         {
@@ -84,7 +84,7 @@
           "type": "travel",
           "mode": "walking",
           "duration_minutes": 0,
-          "distance_km": 0.33
+          "distance_km": 0.26
         },
         {
           "time": "12:03",
@@ -101,7 +101,7 @@
         "category": "excellent"
       },
       "pois_count": 3,
-      "total_walking_km": 1.44,
+      "total_walking_km": 1.49,
       "start_time": "09:00",
       "end_time": "12:03",
       "timeline": [
@@ -112,22 +112,22 @@
           "notes": "Start of day"
         },
         {
-          "time": "09:00",
+          "time": "09:01",
           "type": "travel",
           "mode": "walking",
-          "duration_minutes": 0,
-          "distance_km": 0.44
+          "duration_minutes": 1,
+          "distance_km": 0.47
         },
         {
-          "time": "10:00",
+          "time": "10:01",
           "type": "poi",
-          "name": "天性寺",
+          "name": "辨天堂",
           "category": "Religion",
           "duration_minutes": 60,
-          "address": "天性寺, 姉小路通, Nakagyo Ward, Kyoto, Rokuchome 604-8006, Japan",
+          "address": "辨天堂, Sanjo Street, Nakagyo Ward, Kyoto, Rokuchome 604-8036, Japan",
           "coordinates": {
-            "lat": 35.009260099652295,
-            "lon": 135.76772461963589
+            "lat": 35.009033899652266,
+            "lon": 135.7680693
           }
         },
         {
@@ -135,7 +135,7 @@
           "type": "travel",
           "mode": "walking",
           "duration_minutes": 0,
-          "distance_km": 0.09
+          "distance_km": 0.12
         },
         {
           "time": "11:01",
@@ -190,9 +190,9 @@
         "category": "excellent"
       },
       "pois_count": 2,
-      "total_walking_km": 0.7,
+      "total_walking_km": 2.22,
       "start_time": "09:00",
-      "end_time": "11:01",
+      "end_time": "11:04",
       "timeline": [
         {
           "time": "09:00",
@@ -220,33 +220,33 @@
           }
         },
         {
-          "time": "10:01",
+          "time": "10:03",
           "type": "travel",
           "mode": "walking",
-          "duration_minutes": 0,
-          "distance_km": 0.07
+          "duration_minutes": 2,
+          "distance_km": 1.24
         },
         {
-          "time": "11:01",
+          "time": "11:03",
           "type": "poi",
-          "name": "辨天堂",
+          "name": "中町通",
           "category": "Religion",
           "duration_minutes": 60,
-          "address": "辨天堂, Sanjo Street, Nakagyo Ward, Kyoto, Rokuchome 604-8036, Japan",
+          "address": "中町通, Nakagyo Ward, Kyoto, Rokuchome 602-8072, Japan",
           "coordinates": {
-            "lat": 35.009033899652266,
-            "lon": 135.7680693
+            "lat": 35.015178599652685,
+            "lon": 135.76960069999998
           }
         },
         {
-          "time": "11:01",
+          "time": "11:04",
           "type": "travel",
           "mode": "walking",
-          "duration_minutes": 0,
-          "distance_km": 0.28
+          "duration_minutes": 1,
+          "distance_km": 0.63
         },
         {
-          "time": "11:01",
+          "time": "11:04",
           "type": "end",
           "location": "Accommodation",
           "notes": "End of day"

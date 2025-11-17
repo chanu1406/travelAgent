@@ -42,55 +42,102 @@ class POIAgent:
     """
 
     # Map user interest keywords to Geoapify categories
-    INTEREST_TO_CATEGORY = {
-        # Religious/Cultural
-        "temples": "religion",
-        "temple": "religion",
-        "shrines": "religion",
-        "shrine": "religion",
-        "churches": "religion.christian",
-        "church": "religion.christian",
-        "mosques": "religion.muslim",
-        "mosque": "religion.muslim",
+    # Each interest can map to multiple categories for better coverage
+    INTEREST_TO_CATEGORIES = {
+        # Religious/Cultural Sites
+        # Note: Geoapify free tier only supports broad categories like "religion", not subcategories
+        "temples": ["religion", "heritage", "tourism"],
+        "temple": ["religion", "heritage", "tourism"],
+        "shrines": ["religion", "heritage", "tourism"],
+        "shrine": ["religion", "heritage", "tourism"],
+        "churches": ["religion", "heritage", "tourism"],
+        "church": ["religion", "heritage", "tourism"],
+        "mosques": ["religion", "heritage", "tourism"],
+        "mosque": ["religion", "heritage", "tourism"],
+        "synagogues": ["religion", "heritage", "tourism"],
+        "synagogue": ["religion", "heritage", "tourism"],
+
+        # Cultural & Tourist Attractions
+        "cultural sites": ["heritage", "tourism", "entertainment.museum"],
+        "culture": ["heritage", "tourism", "entertainment.museum"],
+        "tourist attractions": ["tourism", "heritage"],
+        "attractions": ["tourism", "heritage"],
+        "landmarks": ["tourism", "heritage"],
+        "landmark": ["tourism", "heritage"],
+        "monuments": ["heritage", "tourism"],
+        "monument": ["heritage", "tourism"],
+        "heritage": ["heritage", "tourism"],
+        "historic": ["heritage", "tourism"],
+        "historical": ["heritage", "tourism"],
 
         # Food & Drink
-        "coffee": "catering.cafe",
-        "coffee shops": "catering.cafe",
-        "cafe": "catering.cafe",
-        "cafes": "catering.cafe",
-        "restaurants": "catering.restaurant",
-        "restaurant": "catering.restaurant",
-        "food": "catering",
-        "bars": "catering.bar",
-        "bar": "catering.bar",
+        "coffee": ["catering.cafe"],
+        "coffee shops": ["catering.cafe"],
+        "cafe": ["catering.cafe"],
+        "cafes": ["catering.cafe"],
+        "restaurants": ["catering.restaurant"],
+        "restaurant": ["catering.restaurant"],
+        "food": ["catering.restaurant", "catering.cafe", "catering.fast_food"],
+        "dining": ["catering.restaurant"],
+        "bars": ["catering.bar", "catering.pub"],
+        "bar": ["catering.bar", "catering.pub"],
+        "pubs": ["catering.pub"],
+        "pub": ["catering.pub"],
+        "street food": ["catering.fast_food", "catering.restaurant"],
 
         # Culture & Entertainment
-        "museums": "entertainment.museum",
-        "museum": "entertainment.museum",
-        "art": "entertainment.culture",
-        "art galleries": "entertainment.culture",
-        "gallery": "entertainment.culture",
-        "galleries": "entertainment.culture",
-        "theater": "entertainment.culture",
-        "theatre": "entertainment.culture",
+        "museums": ["entertainment.museum"],
+        "museum": ["entertainment.museum"],
+        "art": ["entertainment.culture", "entertainment.museum"],
+        "art galleries": ["entertainment.culture"],
+        "gallery": ["entertainment.culture"],
+        "galleries": ["entertainment.culture"],
+        "theater": ["entertainment.culture"],
+        "theatre": ["entertainment.culture"],
+        "cinema": ["entertainment.cinema"],
+        "movies": ["entertainment.cinema"],
 
         # Nature & Outdoors
-        "parks": "leisure.park",
-        "park": "leisure.park",
-        "hiking": "leisure.park",
-        "nature": "leisure.park",
-        "gardens": "leisure.park",
-        "garden": "leisure.park",
+        "parks": ["leisure.park", "natural"],
+        "park": ["leisure.park", "natural"],
+        "hiking": ["sport.climbing", "leisure.park", "natural"],
+        "nature": ["natural", "leisure.park"],
+        "gardens": ["leisure.park"],
+        "garden": ["leisure.park"],
+        "botanical": ["leisure.park"],
+        "beach": ["natural.beach", "leisure"],
+        "beaches": ["natural.beach", "leisure"],
+        "mountains": ["natural.mountain", "natural"],
+        "mountain": ["natural.mountain", "natural"],
+        "viewpoint": ["tourism.viewpoint"],
+        "viewpoints": ["tourism.viewpoint"],
 
         # Shopping
-        "shopping": "commercial.shopping_mall",
-        "shops": "commercial",
-        "markets": "commercial.marketplace",
-        "market": "commercial.marketplace",
+        "shopping": ["commercial.shopping_mall", "commercial.department_store"],
+        "shops": ["commercial"],
+        "markets": ["commercial.marketplace"],
+        "market": ["commercial.marketplace"],
+        "mall": ["commercial.shopping_mall"],
+        "malls": ["commercial.shopping_mall"],
 
-        # Accommodation
-        "hotels": "accommodation",
-        "hotel": "accommodation.hotel",
+        # Activities & Sports
+        "sports": ["sport", "leisure"],
+        "fitness": ["sport.fitness"],
+        "gym": ["sport.fitness"],
+        "swimming": ["sport.swimming", "leisure"],
+        "spa": ["leisure.spa"],
+        "wellness": ["leisure.spa"],
+
+        # Accommodation (for reference, not typically searched)
+        "hotels": ["accommodation.hotel"],
+        "hotel": ["accommodation.hotel"],
+    }
+
+    # Fallback categories for broad interests
+    FALLBACK_CATEGORIES = {
+        "tourism": ["tourism.attraction", "tourism.sights"],
+        "culture": ["tourism.attraction", "entertainment.museum"],
+        "general": ["tourism.attraction"],
     }
 
     def __init__(self, api_key: str | None = None) -> None:
@@ -111,7 +158,7 @@ class POIAgent:
         self,
         location: str,
         interests: list[str],
-        radius_km: float = 10.0,
+        radius_km: float = 15.0,  # Increased from 10 to 15km for better coverage
         limit: int = 50,
     ) -> list[POI]:
         """
@@ -134,51 +181,204 @@ class POIAgent:
         latitude = geocode_result["latitude"]
         longitude = geocode_result["longitude"]
 
-        # Step 2: Map interests to Geoapify categories
-        categories = []
-        for interest in interests:
-            interest_lower = interest.lower().strip()
-            if interest_lower in self.INTEREST_TO_CATEGORY:
-                categories.append(self.INTEREST_TO_CATEGORY[interest_lower])
-            # If no mapping found, try searching with the raw keyword
-            else:
-                categories.append(None)  # Will use query parameter instead
-
-        # Step 3: Search for POIs for each interest
+        # Step 2: Search for POIs for each interest
         all_pois: list[POI] = []
         seen_ids: set[str] = set()
 
-        for i, interest in enumerate(interests):
-            category = categories[i]
-            query = interest if category is None else None
+        for interest in interests:
+            interest_lower = interest.lower().strip()
 
-            try:
-                pois = await self.client.search_nearby(
-                    latitude=latitude,
-                    longitude=longitude,
-                    query=query,
-                    categories=category,
-                    radius_meters=int(radius_km * 1000),
-                    limit=limit,
-                )
+            # Get category mapping (list of categories)
+            categories = self.INTEREST_TO_CATEGORIES.get(interest_lower)
 
-                # Deduplicate by id
-                for poi in pois:
-                    if poi.id not in seen_ids:
-                        seen_ids.add(poi.id)
-                        all_pois.append(poi)
+            pois_found_for_interest = 0
 
-            except Exception as e:
-                # Log error but continue with other interests
-                print(f"Warning: Failed to search for '{interest}': {e}")
+            if categories:
+                # Try each category until we get good results
+                for category in categories:
+                    try:
+                        pois = await self.client.search_nearby(
+                            latitude=latitude,
+                            longitude=longitude,
+                            query=None,  # Use category filtering, not text search
+                            categories=category,
+                            radius_meters=int(radius_km * 1000),
+                            limit=limit,
+                        )
+
+                        # Deduplicate by id
+                        for poi in pois:
+                            if poi.id not in seen_ids:
+                                seen_ids.add(poi.id)
+                                all_pois.append(poi)
+                                pois_found_for_interest += 1
+
+                        # If we got enough results (at least 5), break
+                        if pois_found_for_interest >= 5:
+                            break
+
+                    except Exception as e:
+                        # Try next category for this interest
+                        continue
+
+                # Note: Text search with query parameter not supported on free tier
+                # If we didn't find enough, that's okay - scoring will prioritize what we found
+
+            else:
+                # No category mapping - use general tourism category
+                try:
+                    pois = await self.client.search_nearby(
+                        latitude=latitude,
+                        longitude=longitude,
+                        query=None,
+                        categories="tourism",
+                        radius_meters=int(radius_km * 1000),
+                        limit=limit,
+                    )
+
+                    for poi in pois:
+                        if poi.id not in seen_ids:
+                            seen_ids.add(poi.id)
+                            all_pois.append(poi)
+
+                except Exception as e:
+                    print(f"Warning: Failed to search for '{interest}': {e}")
+                    continue
+
+        # Step 3: Filter out low-quality POIs
+        filtered_pois = self._filter_pois(all_pois)
+
+        # Step 4: Score and rank POIs
+        scored_pois = self._score_pois(filtered_pois, latitude, longitude, interests)
+
+        # Step 5: Sort by score (highest first)
+        scored_pois.sort(key=lambda x: x[1], reverse=True)
+
+        # Return just the POI objects (without scores)
+        return [poi for poi, score in scored_pois]
+
+    def _filter_pois(self, pois: list[POI]) -> list[POI]:
+        """
+        Filter out low-quality or irrelevant POIs.
+
+        Args:
+            pois: List of POIs to filter
+
+        Returns:
+            Filtered list of POIs
+        """
+        # Categories to exclude (too generic or not useful for tourists)
+        EXCLUDE_CATEGORIES = {
+            "building",  # Generic buildings
+            "commercial.supermarket",  # Supermarkets
+            "service.vehicle",  # Car services
+            "service.banking.atm",  # ATMs
+            "office",  # Generic offices
+        }
+
+        # Keywords that indicate low-quality POIs for tourism
+        EXCLUDE_KEYWORDS = [
+            "parking",
+            "atm",
+            "toilet",
+            "unnamed",
+            "no name",
+            "storage",
+            "warehouse",
+        ]
+
+        filtered = []
+        for poi in pois:
+            # Skip if category is in exclude list
+            if poi.category.lower() in EXCLUDE_CATEGORIES:
                 continue
 
-        # Step 4: Sort by distance from center (closest first)
-        all_pois.sort(key=lambda p: self._haversine_distance(
-            latitude, longitude, p.latitude, p.longitude
-        ))
+            # Skip if name contains exclude keywords
+            name_lower = poi.name.lower()
+            if any(keyword in name_lower for keyword in EXCLUDE_KEYWORDS):
+                continue
 
-        return all_pois
+            # Skip POIs with very short names (likely incomplete data)
+            if len(poi.name) < 2:
+                continue
+
+            filtered.append(poi)
+
+        return filtered
+
+    def _score_pois(
+        self, pois: list[POI], center_lat: float, center_lon: float, interests: list[str]
+    ) -> list[tuple[POI, float]]:
+        """
+        Score POIs based on relevance, distance, and category.
+
+        Higher scores = better POIs
+
+        Args:
+            pois: List of POIs to score
+            center_lat: Center latitude for distance calculation
+            center_lon: Center longitude for distance calculation
+            interests: User interests for relevance scoring
+
+        Returns:
+            List of (POI, score) tuples
+        """
+        scored = []
+
+        for poi in pois:
+            score = 0.0
+
+            # 1. Category bonus (prefer certain types)
+            category_lower = poi.category.lower()
+
+            if any(x in category_lower for x in ["religion", "temple", "shrine", "church"]):
+                score += 15.0  # Religious sites
+            elif "museum" in category_lower:
+                score += 12.0  # Museums
+            elif "tourism" in category_lower:
+                score += 10.0  # Tourist attractions
+            elif "heritage" in category_lower:
+                score += 13.0  # Heritage sites
+            elif "park" in category_lower or "garden" in category_lower:
+                score += 8.0  # Parks and gardens
+            elif "cafe" in category_lower or "restaurant" in category_lower:
+                score += 6.0  # Food and drink
+            else:
+                score += 3.0  # Everything else
+
+            # 2. Distance penalty (prefer closer POIs, but not too harsh)
+            distance_km = self._haversine_distance(
+                center_lat, center_lon, poi.latitude, poi.longitude
+            )
+
+            if distance_km < 2.0:
+                score += 5.0  # Very close
+            elif distance_km < 5.0:
+                score += 3.0  # Close
+            elif distance_km < 10.0:
+                score += 1.0  # Moderate distance
+            else:
+                score -= (distance_km - 10.0) * 0.5  # Penalty for far POIs
+
+            # 3. Name quality bonus
+            # POIs with longer names often have better metadata
+            if len(poi.name) > 10:
+                score += 2.0
+            elif len(poi.name) > 20:
+                score += 3.0
+
+            # 4. Interest matching bonus
+            # Check if POI name or category matches user interests
+            name_lower = poi.name.lower()
+            for interest in interests:
+                interest_lower = interest.lower()
+                if interest_lower in name_lower or interest_lower in category_lower:
+                    score += 8.0  # Strong match bonus
+                    break
+
+            scored.append((poi, score))
+
+        return scored
 
     @staticmethod
     def _haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

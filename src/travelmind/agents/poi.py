@@ -26,6 +26,7 @@ Output includes:
 
 from typing import Any
 
+from ..exceptions import GeoapifyAPIError, NoPOIsFoundError, POISearchError
 from ..models.poi import POI
 from ..services.geoapify import GeoapifyClient
 from ..utils.config import settings
@@ -172,11 +173,34 @@ class POIAgent:
 
         Returns:
             List of POI objects with name, coords, category, etc.
+
+        Raises:
+            POISearchError: If geocoding fails or search encounters an error
+            NoPOIsFoundError: If no POIs are found for the given criteria
+            GeoapifyAPIError: If Geoapify API returns an error
         """
+        # Validate inputs
+        if not location or not location.strip():
+            raise POISearchError("Location cannot be empty")
+
+        if not interests or len(interests) == 0:
+            raise POISearchError("At least one interest must be specified")
+
+        if radius_km <= 0 or radius_km > 50:
+            raise POISearchError(f"Search radius must be between 0 and 50 km (got {radius_km})")
+
         # Step 1: Geocode the location to get coordinates
-        geocode_result = await self.client.geocode(location)
+        try:
+            geocode_result = await self.client.geocode(location)
+        except Exception as e:
+            raise GeoapifyAPIError(
+                f"Failed to geocode location '{location}': {str(e)}"
+            )
+
         if not geocode_result:
-            raise ValueError(f"Could not geocode location: {location}")
+            raise POISearchError(
+                f"Could not find location: '{location}'. Please check spelling or try a more specific location."
+            )
 
         latitude = geocode_result["latitude"]
         longitude = geocode_result["longitude"]
@@ -184,6 +208,7 @@ class POIAgent:
         # Step 2: Search for POIs for each interest
         all_pois: list[POI] = []
         seen_ids: set[str] = set()
+        failed_interests: list[str] = []
 
         for interest in interests:
             interest_lower = interest.lower().strip()
@@ -192,6 +217,7 @@ class POIAgent:
             categories = self.INTEREST_TO_CATEGORIES.get(interest_lower)
 
             pois_found_for_interest = 0
+            interest_failed = True
 
             if categories:
                 # Try each category until we get good results
@@ -212,6 +238,10 @@ class POIAgent:
                                 seen_ids.add(poi.id)
                                 all_pois.append(poi)
                                 pois_found_for_interest += 1
+
+                        # If we got results, mark interest as successful
+                        if pois_found_for_interest > 0:
+                            interest_failed = False
 
                         # If we got enough results (at least 5), break
                         if pois_found_for_interest >= 5:
@@ -241,17 +271,47 @@ class POIAgent:
                             seen_ids.add(poi.id)
                             all_pois.append(poi)
 
-                except Exception as e:
-                    print(f"Warning: Failed to search for '{interest}': {e}")
-                    continue
+                    if len(pois) > 0:
+                        interest_failed = False
 
-        # Step 3: Filter out low-quality POIs
+                except Exception as e:
+                    # Log error but continue with other interests
+                    pass
+
+            # Track which interests failed to find any POIs
+            if interest_failed:
+                failed_interests.append(interest)
+
+        # Step 3: Check if we found any POIs
+        if len(all_pois) == 0:
+            # Provide helpful error message
+            if len(failed_interests) == len(interests):
+                # All interests failed
+                raise NoPOIsFoundError(
+                    f"No POIs found in {location} for interests: {', '.join(interests)}. "
+                    f"Try broadening your search area or selecting different interests."
+                )
+            else:
+                # Some interests failed, but we have results
+                raise NoPOIsFoundError(
+                    f"No POIs found in {location}. This location might not have "
+                    f"data available in our database. Try a larger city nearby."
+                )
+
+        # Step 4: Filter out low-quality POIs
         filtered_pois = self._filter_pois(all_pois)
 
-        # Step 4: Score and rank POIs
+        # Check if filtering removed everything
+        if len(filtered_pois) == 0:
+            raise NoPOIsFoundError(
+                f"Found {len(all_pois)} POIs in {location}, but all were filtered out as low-quality. "
+                f"Try different interests or a different location."
+            )
+
+        # Step 5: Score and rank POIs
         scored_pois = self._score_pois(filtered_pois, latitude, longitude, interests)
 
-        # Step 5: Sort by score (highest first)
+        # Step 6: Sort by score (highest first)
         scored_pois.sort(key=lambda x: x[1], reverse=True)
 
         # Return just the POI objects (without scores)

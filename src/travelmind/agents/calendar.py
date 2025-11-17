@@ -33,6 +33,7 @@ Output: A structured itinerary with:
 from datetime import date, datetime, timedelta
 from typing import Any
 
+from ..exceptions import InsufficientPOIsError, ItineraryBuildError
 from ..models.poi import POI
 from ..models.request import TravelConstraints
 from .route import RouteAgent
@@ -72,16 +73,41 @@ class CalendarAgent:
 
         Returns:
             Complete itinerary with day-by-day schedules
+
+        Raises:
+            ItineraryBuildError: If itinerary building fails due to invalid inputs
+            InsufficientPOIsError: If there are not enough POIs for the trip length
         """
+        # Validate inputs
+        if not travel_dates or len(travel_dates) == 0:
+            raise ItineraryBuildError("No travel dates provided")
+
+        if len(travel_dates) > 14:
+            raise ItineraryBuildError(
+                f"Trip length ({len(travel_dates)} days) exceeds maximum of 14 days"
+            )
+
+        if not pois or len(pois) == 0:
+            raise InsufficientPOIsError(
+                "No POIs provided. Cannot build itinerary without destinations."
+            )
+
         if constraints is None:
             constraints = TravelConstraints()
 
         n_days = len(travel_dates)
 
-        # Step 1: Cluster POIs by day (simple round-robin for now)
-        poi_clusters = self._cluster_by_day(pois, n_days)
+        # Validate POI count vs trip length
+        # Rule of thumb: need at least 2-3 POIs per day for a good itinerary
+        min_pois_needed = max(n_days * 2, 3)  # At least 3 POIs total
+        if len(pois) < min_pois_needed:
+            raise InsufficientPOIsError(
+                f"Not enough POIs for a {n_days}-day trip. Found {len(pois)} POIs, "
+                f"but need at least {min_pois_needed} for a quality itinerary. "
+                f"Try expanding your interests or search radius."
+            )
 
-        # Step 2: Get weather forecast
+        # Step 1: Get weather forecast FIRST (needed for smart POI assignment)
         if pois:
             lat, lon = pois[0].latitude, pois[0].longitude
             weather_data = await self.weather_agent.get_forecast(
@@ -92,6 +118,13 @@ class CalendarAgent:
             )
         else:
             weather_data = {"daily": [], "hourly": []}
+
+        # Step 2: Cluster POIs by day WITH weather awareness
+        poi_clusters = self._cluster_pois_by_weather(
+            pois=pois,
+            n_days=n_days,
+            weather_data=weather_data.get("daily", []),
+        )
 
         # Step 3: Build daily schedules
         daily_schedules = []
@@ -166,6 +199,98 @@ class CalendarAgent:
 
             clusters.append(pois[start_idx:end_idx])
             start_idx = end_idx
+
+        return clusters
+
+    def _cluster_pois_by_weather(
+        self,
+        pois: list[POI],
+        n_days: int,
+        weather_data: list[dict[str, Any]],
+    ) -> list[list[POI]]:
+        """
+        Assign POIs to days based on weather appropriateness.
+
+        Strategy:
+        - Bad weather days → indoor POIs (museums, cafes)
+        - Good weather days → outdoor POIs (temples, parks)
+        - Mix when possible to balance the itinerary
+
+        Args:
+            pois: List of POIs to distribute
+            n_days: Number of days in the trip
+            weather_data: Daily weather forecasts
+
+        Returns:
+            List of POI lists, one per day, matched to weather
+        """
+        if not pois or n_days <= 0:
+            return []
+
+        # Categorize POIs by weather suitability
+        indoor_pois = [poi for poi in pois if poi.is_indoor()]
+        outdoor_pois = [poi for poi in pois if poi.is_outdoor()]
+        flexible_pois = [poi for poi in pois if not poi.is_indoor() and not poi.is_outdoor()]
+
+        # Categorize days by weather quality
+        good_weather_days = []
+        bad_weather_days = []
+        moderate_weather_days = []
+
+        for day_idx in range(n_days):
+            if day_idx < len(weather_data):
+                day_weather = weather_data[day_idx]
+                category = day_weather.get("category", "good")
+
+                if category in ["excellent", "good"]:
+                    good_weather_days.append(day_idx)
+                elif category in ["indoor", "challenging"]:
+                    bad_weather_days.append(day_idx)
+                else:
+                    moderate_weather_days.append(day_idx)
+            else:
+                # No weather data, assume moderate
+                moderate_weather_days.append(day_idx)
+
+        # Initialize clusters
+        clusters: list[list[POI]] = [[] for _ in range(n_days)]
+
+        # Distribute indoor POIs to bad weather days
+        for i, poi in enumerate(indoor_pois):
+            if bad_weather_days:
+                day_idx = bad_weather_days[i % len(bad_weather_days)]
+            else:
+                # No bad weather days, distribute evenly
+                day_idx = i % n_days
+            clusters[day_idx].append(poi)
+
+        # Distribute outdoor POIs to good weather days
+        for i, poi in enumerate(outdoor_pois):
+            if good_weather_days:
+                day_idx = good_weather_days[i % len(good_weather_days)]
+            else:
+                # No specifically good days, use moderate or any available
+                day_idx = (moderate_weather_days + list(range(n_days)))[i % n_days]
+            clusters[day_idx].append(poi)
+
+        # Distribute flexible POIs to balance days
+        for i, poi in enumerate(flexible_pois):
+            # Find the day with fewest POIs
+            min_day = min(range(n_days), key=lambda d: len(clusters[d]))
+            clusters[min_day].append(poi)
+
+        # Balance pass: ensure no day has 0 POIs if others have many
+        max_pois_per_day = max(len(cluster) for cluster in clusters) if clusters else 0
+        if max_pois_per_day > 3:
+            # Move POIs from overloaded days to empty days
+            for day_idx in range(n_days):
+                if len(clusters[day_idx]) == 0:
+                    # Find a day with extra POIs
+                    donor_day = max(range(n_days), key=lambda d: len(clusters[d]))
+                    if len(clusters[donor_day]) > 1:
+                        # Move one POI
+                        poi = clusters[donor_day].pop()
+                        clusters[day_idx].append(poi)
 
         return clusters
 

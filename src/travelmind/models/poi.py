@@ -79,6 +79,107 @@ class POI(BaseModel):
     phone: str | None = None
     image_url: str | None = None
 
+    def is_indoor(self) -> bool:
+        """
+        Determine if this POI is primarily indoors.
+
+        Returns:
+            True if indoor, False if outdoor
+        """
+        category_lower = self.category.lower()
+
+        # Definitely indoor categories
+        indoor_keywords = [
+            "museum",
+            "entertainment",
+            "cafe",
+            "restaurant",
+            "bar",
+            "pub",
+            "shopping",
+            "mall",
+            "cinema",
+            "theater",
+            "theatre",
+            "spa",
+            "fitness",
+            "gym",
+        ]
+
+        return any(keyword in category_lower for keyword in indoor_keywords)
+
+    def is_outdoor(self) -> bool:
+        """
+        Determine if this POI is primarily outdoors.
+
+        Returns:
+            True if outdoor, False if indoor
+        """
+        category_lower = self.category.lower()
+
+        # Definitely outdoor categories
+        outdoor_keywords = [
+            "park",
+            "garden",
+            "natural",
+            "beach",
+            "mountain",
+            "viewpoint",
+            "hiking",
+            "sport.climbing",
+        ]
+
+        # Religious sites (temples, shrines) are often outdoor
+        if any(keyword in category_lower for keyword in outdoor_keywords):
+            return True
+
+        # Temples, shrines, monuments are typically outdoor experiences
+        if any(keyword in category_lower for keyword in ["religion", "heritage"]):
+            return True
+
+        return False
+
+    def is_weather_sensitive(self) -> bool:
+        """
+        Determine if this POI experience is heavily affected by weather.
+
+        Returns:
+            True if weather-sensitive (should avoid in bad weather)
+        """
+        category_lower = self.category.lower()
+
+        # Highly weather-dependent activities
+        sensitive_keywords = [
+            "beach",
+            "hiking",
+            "mountain",
+            "viewpoint",
+            "park",
+            "garden",
+            "natural",
+            "sport.climbing",
+        ]
+
+        return any(keyword in category_lower for keyword in sensitive_keywords)
+
+    def get_weather_suitability(self) -> str:
+        """
+        Get the weather preference for this POI.
+
+        Returns:
+            "indoor" - best for any weather (museums, cafes)
+            "outdoor" - requires good weather (parks, temples)
+            "flexible" - can work in various conditions
+        """
+        if self.is_indoor():
+            return "indoor"
+        elif self.is_weather_sensitive():
+            return "outdoor"
+        elif self.is_outdoor():
+            return "outdoor"
+        else:
+            return "flexible"
+
 
 class POISearchResult(BaseModel):
     """Result set from a POI search query."""

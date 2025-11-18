@@ -238,10 +238,15 @@ Response: {
                     raise ValueError("Invalid date type")
 
                 # Check if start date is in the past
+                # If it's in the past, try adding a year (user probably meant next year)
                 if start_date_obj < today:
-                    raise InvalidDateError(
-                        f"Start date ({start_date}) is in the past. Please provide a future date."
-                    )
+                    # Try next year
+                    start_date_obj = start_date_obj.replace(year=start_date_obj.year + 1)
+                    # If still in the past (shouldn't happen), error
+                    if start_date_obj < today:
+                        raise InvalidDateError(
+                            f"Start date ({start_date}) is in the past. Please provide a future date."
+                        )
 
                 data["start_date"] = start_date_obj.strftime("%Y-%m-%d")
             except ValueError:
@@ -260,10 +265,15 @@ Response: {
                     raise ValueError("Invalid date type")
 
                 # Check if end date is in the past
+                # If it's in the past, try adding a year (user probably meant next year)
                 if end_date_obj < today:
-                    raise InvalidDateError(
-                        f"End date ({end_date}) is in the past. Please provide a future date."
-                    )
+                    # Try next year
+                    end_date_obj = end_date_obj.replace(year=end_date_obj.year + 1)
+                    # If still in the past (shouldn't happen), error
+                    if end_date_obj < today:
+                        raise InvalidDateError(
+                            f"End date ({end_date}) is in the past. Please provide a future date."
+                        )
 
                 data["end_date"] = end_date_obj.strftime("%Y-%m-%d")
             except ValueError:

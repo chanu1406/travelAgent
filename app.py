@@ -99,11 +99,21 @@ async def plan_trip(request: TripRequest):
         result = await workflow.ainvoke(initial_state)
 
         # Check if workflow succeeded
-        if result.get("error"):
+        if result.get("errors") and len(result["errors"]) > 0:
+            # Get the first error
+            error_msg = result["errors"][0]
             return TripResponse(
                 success=False,
-                error=result["error"],
+                error=error_msg,
                 error_type="WorkflowError",
+            )
+
+        # Check if we have an itinerary
+        if not result.get("itinerary"):
+            return TripResponse(
+                success=False,
+                error="Failed to generate itinerary. Please try a different query.",
+                error_type="NoItinerary",
             )
 
         # Return the itinerary

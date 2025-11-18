@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelMind - AI Trip Planner</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🧳 TravelMind</h1>
+            <p class="tagline">AI-powered travel itinerary planner</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Query Input Section -->
+            <section class="query-section">
+                <h2>Plan Your Trip</h2>
+                <p class="hint">Describe your trip in natural language</p>
+
+                <div class="examples">
+                    <p class="examples-title">Examples:</p>
+                    <button class="example-btn" onclick="fillExample('4 days in Kyoto, love temples and coffee shops')">
+                        Kyoto 4 days
+                    </button>
+                    <button class="example-btn" onclick="fillExample('3 day trip to Tokyo, interested in museums and parks')">
+                        Tokyo 3 days
+                    </button>
+                    <button class="example-btn" onclick="fillExample('5 days in Paris starting December 1, love art galleries and cafes')">
+                        Paris 5 days
+                    </button>
+                </div>
+
+                <form id="planForm" onsubmit="handleSubmit(event)">
+                    <textarea
+                        id="queryInput"
+                        name="query"
+                        placeholder="E.g., '4 days in Kyoto, love temples and coffee shops'"
+                        rows="4"
+                        required
+                    ></textarea>
+
+                    <button type="submit" id="submitBtn" class="submit-btn">
+                        Generate Itinerary
+                    </button>
+                </form>
+            </section>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state" style="display: none;">
+                <div class="spinner"></div>
+                <p id="loadingMessage">Planning your trip...</p>
+                <div class="progress-steps">
+                    <div class="step" id="step-intent">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">Understanding your request</span>
+                    </div>
+                    <div class="step" id="step-poi">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">Finding attractions</span>
+                    </div>
+                    <div class="step" id="step-weather">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">Checking weather</span>
+                    </div>
+                    <div class="step" id="step-itinerary">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">Building itinerary</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Display -->
+            <div id="errorDisplay" class="error-display" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h3 id="errorTitle">Error</h3>
+                <p id="errorMessage"></p>
+                <button onclick="hideError()" class="retry-btn">Try Again</button>
+            </div>
+
+            <!-- Results Section -->
+            <section id="resultsSection" class="results-section" style="display: none;">
+                <div class="results-header">
+                    <h2>Your Itinerary</h2>
+                    <button onclick="resetForm()" class="new-plan-btn">Plan Another Trip</button>
+                </div>
+
+                <div id="itineraryContent" class="itinerary-content">
+                    <!-- Itinerary will be rendered here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Powered by TravelMind AI • Weather-aware scheduling • Optimized routes</p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
